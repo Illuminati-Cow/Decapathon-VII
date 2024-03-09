@@ -40,7 +40,9 @@ class Preload extends Phaser.Scene {
         this.load.on('complete', () => {this.scene.stop(this)})
         // Load assets
         this.load.path = './assets/';
-        this.load.image('loadscreen', 'decap_Loadscreen.png')
+        this.load.image('loadscreen', 'decap_Loadscreen.png');
+        this.load.image('menuscreen', 'decap_Menuscreen.png');
+        this.load.image('progressBar', 'decap_Progress_Bar.png');
     }
 
     /**
