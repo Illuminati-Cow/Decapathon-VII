@@ -7,12 +7,13 @@ class MainMenu extends Menu {
 
     create()
     {
+        this.add.image(0,0,'menuscreen').setOrigin(0);
         let startButton = new Button(
             this,
-            0,
+            -160,
             50,
-            25,
-            25,
+            150,
+            60,
             "PLAY",
             () => {this.scene.launch("Load"); this.closeMenu();},
             null,
