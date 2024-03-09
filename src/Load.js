@@ -48,6 +48,6 @@ class Load extends Phaser.Scene {
      * Creates all global assets needed in the game.
      */
     create() {
-        this.add.image(0,0,'loadscreen').setOrigin(0.5)
+        this.add.image(0,0,'loadscreen').setOrigin(0)
     }
 }
