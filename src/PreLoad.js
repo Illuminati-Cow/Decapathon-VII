@@ -10,10 +10,10 @@ class Preload extends Phaser.Scene {
         this.progressBox = this.add.graphics();
         this.progressBar = this.add.graphics();
         let boxConfig = {
-            x: gameSettings.width/2-gameSettings.width/4, 
-            y: gameSettings.height/2-gameSettings.height/10, 
-            width: gameSettings.width/2, 
-            height: gameSettings.height/10
+            x: Settings.width/2-Settings.width/4, 
+            y: Settings.height/2-Settings.height/10, 
+            width: Settings.width/2, 
+            height: Settings.height/10
         }
         this.progressBox.fillStyle(0x222222, 0.8);
         this.progressBox.fillRect(boxConfig.x, boxConfig.y, boxConfig.width, boxConfig.height);
@@ -30,10 +30,10 @@ class Preload extends Phaser.Scene {
             this.progressBar.clear();
             this.progressBar.fillStyle(0xffffff, 1);
             let barConfig = {
-                x: gameSettings.width/2-gameSettings.width/4+5, 
-                y: gameSettings.height/2-gameSettings.height/10+5, 
-                width: gameSettings.width/2-10, 
-                height: gameSettings.height/10-10
+                x: Settings.width/2-Settings.width/4+5, 
+                y: Settings.height/2-Settings.height/10+5, 
+                width: Settings.width/2-10, 
+                height: Settings.height/10-10
             }
             this.progressBar.fillRect(barConfig.x, barConfig.y, barConfig.width * progress, barConfig.height);
         });
@@ -41,8 +41,11 @@ class Preload extends Phaser.Scene {
         // Load assets
         this.load.path = './assets/';
         this.load.image('loadscreen', 'decap_Loadscreen.png');
+        this.load.image('loadscreenLeft', 'decap_Loadscreen_Left_Half.png');
+        this.load.image('loadscreenRight', 'decap_Loadscreen_Right_Half.png');
         this.load.image('menuscreen', 'decap_Menuscreen.png');
         this.load.image('progressBar', 'decap_Progress_Bar.png');
+        this.load.image('button', 'decap_Button.png');
     }
 
     /**
