@@ -17,7 +17,7 @@ const config = {
 
 const game = new Phaser.Game(config)
 
-gameSettings = {
+const Settings = {
     width: config.width,
     height: config.height,
 }
