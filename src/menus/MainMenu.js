@@ -18,7 +18,5 @@ class MainMenu extends Menu {
             null,
             'center'
         );
-
-        this.add(startButton);
     }
 }
