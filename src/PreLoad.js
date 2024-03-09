@@ -48,17 +48,6 @@ class Preload extends Phaser.Scene {
      */
     create() {
         // Create Manager Singleton
-        this.scene.transition({target: "UI", data: { 
-            menus: [
-                'MainMenu'
-            ],
-            huds: [
-
-            ],
-            startingMenu: "MainMenu",
-            startingHud: null,
-        },
-        duration: 100
-    });
+        this.scene.start("UI");
     }
 }
