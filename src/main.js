@@ -2,9 +2,9 @@
  * @type{Phaser.Core.Config}
  */
 const config = {
-    type: Phaser.AUTO,
-    width: 640,
-    height: 480,
+    type: Phaser.WEBGL,
+    width: 832,
+    height: 468,
     scene: [Preload, UIManager, Load, MainGame],
     physics: {
         default: "arcade",
