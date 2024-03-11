@@ -19,5 +19,21 @@ class MainMenu extends Menu {
             null,
             'center'
         );
+
+        let comboButton = new Button(
+            this,
+            -160,
+            150,
+            150,
+            60,
+            "COMBOS",
+            () => {
+                UIManager.Instance.openMenu("ComboMenu");
+                comboButton.clearTint();
+                this.scene.pause(this.name);
+            },
+            null,
+            'center'
+        );
     }
 }
