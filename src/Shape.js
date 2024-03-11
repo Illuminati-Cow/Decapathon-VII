@@ -104,7 +104,6 @@ class Shape extends Phaser.GameObjects.Sprite {
 
         if (!this.anims.isPlaying && this.canShift(direction)) {
             this.#gridStep(direction, 0);
-            console.log("Shifted");
         }
     }
 
@@ -112,12 +111,10 @@ class Shape extends Phaser.GameObjects.Sprite {
         if (!this.isActivePiece) return;
         if (this.softDropping) return;
         if (!this.canFall()) return;
-        console.log("Soft Dropped");
         this.#gridStep(0, -1);
         this.softDropping = true;
         this.scene.time.delayedCall(Shape.softDropIncrement, () => {
             this.softDropping = false;
-            console.log("Soft Drop Ended");
         });
     }
 
@@ -133,11 +130,9 @@ class Shape extends Phaser.GameObjects.Sprite {
 
     #fall(fallIncrement=this.fallIncrement) {
         this.scene.time.delayedCall(fallIncrement, () => {
-            console.log(this.softDropping + " " + this.isActivePiece );
             if (!this.isActivePiece) return;
             if (this.softDropping) this.#fall();
             if (this.canFall()) {
-                console.log("Falling");
                 this.isFalling = true;
                 this.#gridStep(0, -1);
                 if (this.lockEvent != null) {
@@ -181,7 +176,6 @@ class Shape extends Phaser.GameObjects.Sprite {
      * @param {number} [y=0] - The amount to move the shape vertically.
      */
     #gridStep(x=0, y=0) {
-        console.log("Stepping");
         Shape.board[this.X][this.Y] = undefined;
         this.Y += y;
         this.X += x;

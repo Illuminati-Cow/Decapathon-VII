@@ -17,7 +17,20 @@ class MainGame extends Phaser.Scene {
     }
 
     static combos = {
-        
+        vertical: [
+            {score: 100, sequence: ['squiggle', 'squiggle', 'squiggle']},
+            {score: 100, sequence: ['triangle', 'triangle', 'triangle']},
+        ],
+        diagonal: [
+            {score: 200, sequence: ['rectangle', 'rectangle', 'rectangle']},
+        ],
+        antiDiagonal: [
+            {score: 100, sequence: ['rectangle', 'rectangle', 'rectangle']},
+        ],
+        horizontal: [
+            {score: 1000, sequence: ['squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle']},
+            {score: 100, sequence: ['triangle', 'triangle', 'triangle']},
+        ],
     }
 
     constructor() {
@@ -120,7 +133,12 @@ class MainGame extends Phaser.Scene {
 
         // Add listener for piece locking
         this.events.addListener('piecelocked', () => {
-            //this.checkForCombos();
+            let comboScore = this.checkForCombos(this.activePiece);
+            if (comboScore > 0) {
+                this.score += comboScore;
+                this.updateScoreText();
+                this.comboEventPopup(comboScore);
+            }
             this.activePiece = null;
             this.spawnShape();
         });
@@ -128,17 +146,14 @@ class MainGame extends Phaser.Scene {
         // Add listener for shift input
         this.input.keyboard.on('keydown', (event) => {
             
-            
             if (!this.gameRunning) return;
             // Gameplay input
             if (this.activePiece == null) return;
 
             if (event.key == "ArrowLeft") {
                 this.activePiece.shift(-1);
-                console.log("Shifted Left");
             } else if (event.key == "ArrowRight")  {
                 this.activePiece.shift(1);
-                console.log("Shifted Right");
             }
         });
 
@@ -150,7 +165,6 @@ class MainGame extends Phaser.Scene {
 
             if (event.key == "ArrowUp") {
                 this.activePiece.flip();
-                console.log("Flipped");
             }
         });
 
@@ -169,8 +183,172 @@ class MainGame extends Phaser.Scene {
         this.updateScoreText();
     }
 
+    comboEventPopup(score, name=undefined) {
+        let comboText = "";
+        if (name != undefined) {
+            comboText = name + "!  " + score + " pts";
+        }
+        else {
+            comboText = "Combo!  " + score + " pts";
+        }
+        let comboPopup = this.add.text(Settings.width/2, this.scoreText.y + 100, 
+            comboText, {fontSize: '28px', fill: '#fff'}).setOrigin(0.5, 0.5);
+        comboPopup.setDepth(1);
+        comboPopup.scale = 0.1;
+        comboPopup.alpha = 0;
+        this.tweens.add({
+            targets: comboPopup,
+            alpha: 1,
+            scale: 1,
+            duration: 750,
+            ease: 'Sine',
+            yoyo: true,
+            onComplete: () => {comboPopup.destroy()},
+        });
+
+    }
+
+    /**
+     * Checks for combos in the game board based on the given piece.
+     * @param {Shape} piece - The piece to check for combos.
+     * @returns {number} The total score of the combos found.
+     */
     checkForCombos(piece) {
-        
+        let comboScore = 0;
+        comboScore += this.#checkForVerticalCombo(piece);
+        // comboScore += this.#checkForDiagonalCombo(piece);
+        // comboScore += this.#checkForAntiDiagonalCombo(piece);
+        // comboScore += this.#checkForHorizontalCombo(piece);
+        return comboScore;
+    }
+
+    /**
+     * Checks for combos in the game board based on the given piece
+     * in the vertical directions.
+     * @param {Shape} piece - The piece to check for combos.
+     * @returns {number} The total score of the combos found.
+     */
+    #checkForVerticalCombo(piece) {
+        let combos = MainGame.combos.vertical;
+        let vert = this.processBoardSlice(piece.getBoardCol());
+        for (let combo of combos) {
+            let comboSequence = combo.sequence;
+            let comboScore = combo.score;
+            let sequence = [];
+            for (let i = 0; i < vert.length; i++) {
+                // If there is an empty space in the column, reset the sequence
+                if (vert[i] == null) {
+                    sequence = [];
+                    continue;
+                }
+                
+                // Add the type of the piece to the sequence
+                sequence.push(vert[i]);
+
+                // Check to see if the sequence matches the combo sequence
+                if (this.isArrayInArray(sequence, comboSequence)) {
+                    for (let j = i; j > i - comboSequence.length; j--) {
+                        if (Shape.board[piece.X][j] != null) {
+                            Shape.board[piece.X][j].destroy();
+                            Shape.board[piece.X][j] = null;
+                        }
+                    }
+                        return comboScore
+                }
+            }
+        }
+
+        return 0;
+    }
+    
+    /**
+     * Checks for combos in the game board based on the given piece
+     * in the diagonal directions.
+     * @param {Shape} piece - The piece to check for combos.
+     * @returns {number} The total score of the combos found.
+    */
+   #checkForDiagonalCombo(piece) {
+        let combos = MainGame.combos.diagonal;
+        let diag = this.processBoardSlice(piece.getDiagonal());
+        for (let combo of combos) {
+            let comboSequence = combo.sequence;
+            let comboScore = combo.score;
+            let sequence = [];
+            for (let i = 0; i < diag.length; i++) {
+                // If there is an empty space in the column, reset the sequence
+                if (diag[i] == null) {
+                    sequence = [];
+                    continue;
+                }
+                
+                // Add the type of the piece to the sequence
+                sequence.push(diag[i]);
+
+                // Check to see if the sequence matches the combo sequence
+                if (this.isArrayInArray(sequence, comboSequence)) {
+                    for (let j = i; j > i - comboSequence.length; j--) {
+                        if (Shape.board[piece.X][j] != null) {
+                            Shape.board[piece.X][j].destroy();
+                            Shape.board[piece.X][j] = null;
+                        }
+                    }
+                        return comboScore
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks for combos in the game board based on the given piece
+     * in the anti-diagonal directions.
+     * @param {Shape} piece - The piece to check for combos.
+     * @returns {number} The total score of the combos found.
+     */
+    #checkForAntiDiagonalCombo(piece) {
+    
+    }
+
+    /**
+     * Checks for combos in the game board based on the given piece
+     * in the horizontal directions.
+     * @param {Shape} piece - The piece to check for combos.
+     * @returns {number} The total score of the combos found.
+     */
+    #checkForHorizontalCombo(piece) {
+    
+    }
+
+    // Code from Co-Pilot
+    isArrayInArray(larger, smaller) {
+        if (!Array.isArray(larger) || !Array.isArray(smaller)) return false;
+        if (larger.length < smaller.length) return false;
+        console.log("Array Check: ",larger, smaller);
+        let i, j;
+        for (i = 0; i < larger.length; i++) {
+            if (larger[i] === smaller[0]) {
+                for (j = 0; j < smaller.length; j++) {
+                    if (larger[i + j] !== smaller[j]) {
+                        break;
+                    }
+                }
+                if (j === smaller.length) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    processBoardSlice(boardSlice) {
+        let slice = [];
+        for (let sprite of boardSlice) {
+            if (sprite != null) {
+                slice.push(sprite.shape);
+            }
+            else
+                slice.push(null);
+        }
+        return slice;
     }
 
     updateScoreText() {
@@ -186,11 +364,9 @@ class MainGame extends Phaser.Scene {
         if (Shape.board[i][j] != null) {
             Shape.board[i][j].destroy();
             Shape.board[i][j] = null;
-            console.log("Cleared piece at " + i + ", " + j);
         }
         else {
             clearDelay = 0;
-            console.log("No piece at " + i + ", " + j);
         }
 
         if (j >= Shape.board[i].length) {
