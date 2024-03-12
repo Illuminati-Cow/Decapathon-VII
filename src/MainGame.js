@@ -22,10 +22,10 @@ class MainGame extends Phaser.Scene {
             {score: 100, sequence: ['triangle', 'triangle', 'triangle']},
         ],
         diagonal: [
-            {score: 200, sequence: ['rectangle', 'rectangle', 'rectangle']},
+            {score: 400, sequence: ['rectangle', 'rectangle', 'rectangle']},
         ],
         antiDiagonal: [
-            {score: 100, sequence: ['rectangle', 'rectangle', 'rectangle']},
+            {score: 400, sequence: ['rectangle', 'rectangle', 'rectangle']},
         ],
         horizontal: [
             {score: 1000, sequence: ['squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle']},
@@ -138,7 +138,10 @@ class MainGame extends Phaser.Scene {
                 this.score += comboScore;
                 this.updateScoreText();
                 this.comboEventPopup(comboScore);
+                this.sound.play("smallCombo");
             }
+            else
+                this.sound.play("lock");
             this.activePiece = null;
             this.spawnShape();
         });
@@ -172,6 +175,9 @@ class MainGame extends Phaser.Scene {
         this.events.addListener('gameover', () => this.endGame());
 
         this.keys = this.input.keyboard.addKeys('W,S,A,D,UP,DOWN,LEFT,RIGHT,SPACE,ENTER');
+
+        this.sound.add('lock');
+        this.sound.add('smallCombo');
     }
 
     // MAIN UPDATE LOOP
@@ -216,7 +222,7 @@ class MainGame extends Phaser.Scene {
     checkForCombos(piece) {
         let comboScore = 0;
         comboScore += this.#checkForVerticalCombo(piece);
-        // comboScore += this.#checkForDiagonalCombo(piece);
+        comboScore += this.#checkForDiagonalCombo(piece);
         // comboScore += this.#checkForAntiDiagonalCombo(piece);
         // comboScore += this.#checkForHorizontalCombo(piece);
         return comboScore;
@@ -269,6 +275,7 @@ class MainGame extends Phaser.Scene {
     */
    #checkForDiagonalCombo(piece) {
         let combos = MainGame.combos.diagonal;
+        let boardDiag = piece.getDiagonal();
         let diag = this.processBoardSlice(piece.getDiagonal());
         for (let combo of combos) {
             let comboSequence = combo.sequence;
@@ -287,15 +294,18 @@ class MainGame extends Phaser.Scene {
                 // Check to see if the sequence matches the combo sequence
                 if (this.isArrayInArray(sequence, comboSequence)) {
                     for (let j = i; j > i - comboSequence.length; j--) {
-                        if (Shape.board[piece.X][j] != null) {
-                            Shape.board[piece.X][j].destroy();
-                            Shape.board[piece.X][j] = null;
-                        }
+                        boardDiag[j].destroy();
+                        Shape.board[boardDiag[j].X][boardDiag[j].Y] = null;
+                        // if (Shape.board[piece.X][j] != null) {
+                        //     Shape.board[piece.X][j].destroy();
+                        //     Shape.board[piece.X][j] = null;
+                        // }
                     }
-                        return comboScore
+                    return comboScore;
                 }
             }
         }
+        return 0;
     }
 
     /**
@@ -305,7 +315,38 @@ class MainGame extends Phaser.Scene {
      * @returns {number} The total score of the combos found.
      */
     #checkForAntiDiagonalCombo(piece) {
-    
+        let combos = MainGame.combos.diagonal;
+        let boardDiag = piece.getDiagonal();
+        let diag = this.processBoardSlice(piece.getAntiDiagonal());
+        for (let combo of combos) {
+            let comboSequence = combo.sequence;
+            let comboScore = combo.score;
+            let sequence = [];
+            for (let i = 0; i < diag.length; i++) {
+                // If there is an empty space in the column, reset the sequence
+                if (diag[i] == null) {
+                    sequence = [];
+                    continue;
+                }
+                
+                // Add the type of the piece to the sequence
+                sequence.push(diag[i]);
+
+                // Check to see if the sequence matches the combo sequence
+                if (this.isArrayInArray(sequence, comboSequence)) {
+                    for (let j = i; j > i - comboSequence.length; j--) {
+                        boardDiag[j].destroy();
+                        Shape.board[boardDiag[j].X][boardDiag[j].Y] = null;
+                        // if (Shape.board[piece.X][j] != null) {
+                        //     Shape.board[piece.X][j].destroy();
+                        //     Shape.board[piece.X][j] = null;
+                        // }
+                    }
+                    return comboScore;
+                }
+            }
+        }
+        return 0;
     }
 
     /**
@@ -315,7 +356,38 @@ class MainGame extends Phaser.Scene {
      * @returns {number} The total score of the combos found.
      */
     #checkForHorizontalCombo(piece) {
-    
+        let combos = MainGame.combos.diagonal;
+        let boardRow = piece.getDiagonal();
+        let row = this.processBoardSlice(piece.getDiagonal());
+        for (let combo of combos) {
+            let comboSequence = combo.sequence;
+            let comboScore = combo.score;
+            let sequence = [];
+            for (let i = 0; i < row.length; i++) {
+                // If there is an empty space in the column, reset the sequence
+                if (row[i] == null) {
+                    sequence = [];
+                    continue;
+                }
+                
+                // Add the type of the piece to the sequence
+                sequence.push(row[i]);
+
+                // Check to see if the sequence matches the combo sequence
+                if (this.isArrayInArray(sequence, comboSequence)) {
+                    for (let j = i; j > i - comboSequence.length; j--) {
+                        boardRow[j].destroy();
+                        Shape.board[boardRow[j].X][boardRow[j].Y] = null;
+                        // if (Shape.board[piece.X][j] != null) {
+                        //     Shape.board[piece.X][j].destroy();
+                        //     Shape.board[piece.X][j] = null;
+                        // }
+                    }
+                    return comboScore;
+                }
+            }
+        }
+        return 0;
     }
 
     // Code from Co-Pilot
@@ -362,8 +434,16 @@ class MainGame extends Phaser.Scene {
         let clearDelay = MainGame.config.clearDelay;
 
         if (Shape.board[i][j] != null) {
-            Shape.board[i][j].destroy();
-            Shape.board[i][j] = null;
+            this.tweens.add({
+                targets: Shape.board[i][j],
+                scale: 0,
+                duration: 500,
+                y: Shape.board[i][j].y + 100,
+                callback: () => {
+                    Shape.board[i][j].destroy();
+                    Shape.board[i][j] = null;
+                }
+            })
         }
         else {
             clearDelay = 0;
