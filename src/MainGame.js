@@ -13,13 +13,14 @@ class MainGame extends Phaser.Scene {
         endFallStepMs: 200,
         endTomTimeMs: 150,
         endPieceDelayMs: 300,
-        clearDelay: 100,
+        clearDelay: 50,
         softDropIncrementMs: 50,
     }
 
     static combos = {
         vertical: [
             {score: 100, sequence: ['squiggle', 'squiggle', 'squiggle']},
+            {score: 100, sequence: ['triangle', 'triangle', 'triangle']},
         ],
         diagonal: [
             {score: 400, sequence: ['rectangle', 'rectangle', 'rectangle']},
@@ -29,7 +30,7 @@ class MainGame extends Phaser.Scene {
         ],
         horizontal: [
             {score: 1000, sequence: ['squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle', 'squiggle']},
-            {score: 100, sequence: ['triangle', 'triangle', 'triangle']},
+            {score: 200, sequence: ['triangle', 'triangle', 'triangle']},
         ],
     }
 

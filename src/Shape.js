@@ -23,10 +23,6 @@ class Shape extends Phaser.GameObjects.Sprite {
         let scoreSound = scene.sound.add('score');
         this.orientation = 1;
         this.shape = shape;
-        if (shape == 'triangle') {
-            this.setOrigin(0.5, 0.5);
-            this.orientation = -1;
-        }
         this.isFalling = false;
         this.fallIncrement = fallIncrement;
         this.isActivePiece = false;
@@ -100,12 +96,11 @@ class Shape extends Phaser.GameObjects.Sprite {
 
     flip() {
         if (!this.scene.tweens.isTweening(this) && this.isActivePiece) {
-            if (this.shape == 'triangle') return;
             this.orientation = -this.orientation;
-            console.log("Flipping")
+            let rot = this.rotation + Math.PI / 2;
             this.scene.tweens.add({
                 targets: this,
-                rotation: this.rotation + Math.PI / 2,
+                rotation: rot,
                 duration: 200,
                 ease: 'Bounce'
             });
