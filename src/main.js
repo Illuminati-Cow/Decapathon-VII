@@ -33,7 +33,7 @@ const config = {
 var Settings = {
     width: config.width,
     height: config.height,
-    spriteSize: 160
+    spriteSize: 1400
 }
     
 const game = new Phaser.Game(config)

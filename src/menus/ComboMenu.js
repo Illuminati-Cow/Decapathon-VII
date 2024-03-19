@@ -9,11 +9,11 @@ class ComboMenu extends Menu {
     {
         this.add.nineslice(
             Settings.width / 2, 
-            Settings.height / 2, 
+            1.25 * Settings.height / 2, 
             'box', 
             0, 
             Settings.width / 2, 
-            Settings.height / 2, 
+            3 * Settings.height / 4, 
             5, 5, 5, 5
         ).setOrigin(0.5);
 
@@ -33,5 +33,9 @@ class ComboMenu extends Menu {
             null,
             'topleft'
         );
+
+        let combos = this.add.image(closeButton.x+15,closeButton.y+15,'combos').setOrigin(0);
+        combos.setDisplaySize(100);
+        combos.setScale(0.5);
     }
 }
