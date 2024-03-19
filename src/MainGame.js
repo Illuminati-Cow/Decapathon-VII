@@ -107,6 +107,9 @@ class MainGame extends Phaser.Scene {
         this.startText = this.add.bitmapText(width/2, height/5, "retroFont", "Press any key to start", 25).setOrigin(0.5, 0.5);
         this.layer.add(this.startText);
 
+        this.tutText = this.add.bitmapText(width/2, height/2, "retroFont", 
+            "Use Arrow Keys to Move\nUse Up Arrow to Rotate\nUse Down Arrow to Drop", 25).setOrigin(0.5, 0.5);
+
         // Gameplay variables
         this.pieceDelayMs = MainGame.config.pieceDelayMs; // Delay after scoring piece to spawn next piece
         this.fallStepMs = MainGame.config.fallStepMs; // Delay between piece falling one step
@@ -561,6 +564,13 @@ class MainGame extends Phaser.Scene {
                 ease: 'Quintic',
                 duration: 300,
                 onComplete: () => {this.startText.visible = false;},
+            });
+            this.tweens.add({
+                targets: this.tutText,
+                alpha: 0,
+                ease: 'Quintic',
+                duration: 5000,
+                onComplete: () => {this.tutText.visible = false;},
             });
             this.clearBoard();
             this.score = 0;
