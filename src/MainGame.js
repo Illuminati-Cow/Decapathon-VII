@@ -20,7 +20,6 @@ class MainGame extends Phaser.Scene {
     static combos = {
         vertical: [
             {score: 100, sequence: ['squiggle', 'squiggle', 'squiggle']},
-            {score: 100, sequence: ['triangle', 'triangle', 'triangle']},
         ],
         diagonal: [
             {score: 400, sequence: ['rectangle', 'rectangle', 'rectangle']},
@@ -256,6 +255,7 @@ class MainGame extends Phaser.Scene {
      */
     #checkForVerticalCombo(piece) {
         let combos = MainGame.combos.vertical;
+        let boardCol = piece.getBoardCol();
         let vert = this.processBoardSlice(piece.getBoardCol());
         for (let combo of combos) {
             let comboSequence = combo.sequence;
@@ -263,7 +263,7 @@ class MainGame extends Phaser.Scene {
             let sequence = [];
             for (let i = 0; i < vert.length; i++) {
                 // If there is an empty space in the column, reset the sequence
-                if (vert[i] == null) {
+                if (vert[i] == null || (boardCol[i] && boardCol[i].orientation != 1)) {
                     sequence = [];
                     continue;
                 }
@@ -303,7 +303,9 @@ class MainGame extends Phaser.Scene {
             let sequence = [];
             for (let i = 0; i < diag.length; i++) {
                 // If there is an empty space in the column, reset the sequence
-                if (diag[i] == null) {
+                if (diag[i] == null  || (boardDiag[i] && boardDiag[i].orientation != 1)) {
+                    if (diag[i] != undefined && diag[i].orientation != 1)
+                        console.log(diag[i].orientation);
                     sequence = [];
                     continue;
                 }
@@ -340,7 +342,7 @@ class MainGame extends Phaser.Scene {
             let sequence = [];
             for (let i = 0; i < diag.length; i++) {
                 // If there is an empty space in the column, reset the sequence
-                if (diag[i] == null) {
+                if (diag[i] == null  || (boardDiag[i] && boardDiag[i].orientation != -1)) {
                     sequence = [];
                     continue;
                 }
@@ -377,10 +379,11 @@ class MainGame extends Phaser.Scene {
             let sequence = [];
             for (let i = 0; i < row.length; i++) {
                 // If there is an empty space in the row, reset the sequence
-                if (row[i] == null) {
+                if (row[i] == null || (boardRow[i] && boardRow[i].orientation != -1)) {
                     sequence = [];
                     continue;
                 }
+
                 // Add the type of the piece to the sequence
                 sequence.push(row[i]);
 

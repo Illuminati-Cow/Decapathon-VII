@@ -23,6 +23,10 @@ class Shape extends Phaser.GameObjects.Sprite {
         let scoreSound = scene.sound.add('score');
         this.orientation = 1;
         this.shape = shape;
+        if (shape == 'triangle') {
+            this.setOrigin(0.5, 0.5);
+            this.orientation = -1;
+        }
         this.isFalling = false;
         this.fallIncrement = fallIncrement;
         this.isActivePiece = false;
