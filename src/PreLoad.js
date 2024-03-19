@@ -47,6 +47,7 @@ class Preload extends Phaser.Scene {
         this.load.image('progressBar', 'decap_Progress_Bar.png');
         this.load.image('button', 'decap_Button.png');
         this.load.image('box', 'decap_Box.png');
+        this.load.bitmapFont('retroFont', 'fonts/RetroFont.png', 'fonts/RetroFont.xml');
     }
 
     /**

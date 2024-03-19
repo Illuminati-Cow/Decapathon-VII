@@ -55,20 +55,35 @@ class Shape extends Phaser.GameObjects.Sprite {
         this.lockEvent = null;
     }
 
-    beginFall() {
-        this.X = 3;
-        this.Y = 6;
-        Shape.board[this.X][this.Y] = this;
-        this.isFalling = true;
-        this.isActivePiece = true;
-        this.#fall();
+    #fallTime = 0;
+    update() {
+        if (Date.now() > this.#fallTime + this.fallIncrement) {
+            this.#fallTime = Date.now();
+            this.#fall();
+            console.log(this.X, this.Y);
+        }
         this.#checkCollision();
     }
 
+    activate (X, Y) {
+        this.isActivePiece = true;
+        Shape.board[X][Y] = this;
+        this.X = X;
+        this.Y = Y;
+        this.isFalling = true;
+        this.#fallTime = Date.now();
+    }
+
     flip() {
-        if (!this.anims.isPlaying) {
+        if (!this.scene.tweens.isTweening(this) && this.isActivePiece) {
             this.orientation = -this.orientation;
-            this.anims.play(this.shape + "-flip-" + (this.orientation == 1 ? "left" : "right"), true);
+            console.log("Flipping")
+            this.scene.tweens.add({
+                targets: this,
+                rotation: this.rotation + Math.PI / 2,
+                duration: 200,
+                ease: 'Bounce'
+            });
         }
     }
 
@@ -113,6 +128,7 @@ class Shape extends Phaser.GameObjects.Sprite {
         if (!this.canFall()) return;
         this.#gridStep(0, -1);
         this.softDropping = true;
+        this.#fallTime = Date.now();
         this.scene.time.delayedCall(Shape.softDropIncrement, () => {
             this.softDropping = false;
         });
@@ -128,26 +144,23 @@ class Shape extends Phaser.GameObjects.Sprite {
         return true;
     }
 
-    #fall(fallIncrement=this.fallIncrement) {
-        this.scene.time.delayedCall(fallIncrement, () => {
-            if (!this.isActivePiece) return;
-            if (this.softDropping) this.#fall();
-            if (this.canFall()) {
-                this.isFalling = true;
-                this.#gridStep(0, -1);
-                if (this.lockEvent != null) {
-                    this.scene.time.removeEvent(this.lockEvent);
-                    this.lockEvent = null;
-                }
+    #fall() {
+        if (!this.isActivePiece) return;
+        console.log("Falling");
+        if (this.canFall()) {
+            this.isFalling = true;
+            this.#gridStep(0, -1);
+            if (this.lockEvent != null) {
+                this.scene.time.removeEvent(this.lockEvent);
+                this.lockEvent = null;
             }
-            else {
-                this.isFalling = false;
-                if (this.lockEvent == null) {
-                    this.lockEvent = this.scene.time.addEvent(this.lockEventConfig);
-                }
+        }
+        else {
+            this.isFalling = false;
+            if (this.lockEvent == null) {
+                this.lockEvent = this.scene.time.addEvent(this.lockEventConfig);
             }
-            this.#fall();
-        });
+        }
     }
 
     #checkCollision() {
@@ -158,14 +171,15 @@ class Shape extends Phaser.GameObjects.Sprite {
                 this.lockEvent = this.scene.time.addEvent(this.lockEventConfig);
             }
         }
-        if (Shape.board[this.X][this.Y - 1] != undefined) {
+        else if (Shape.board[this.X][this.Y - 1] != undefined) {
             if (this.lockEvent == null) {
                 this.lockEvent = this.scene.time.addEvent(this.lockEventConfig);
             }
         }
-        this.scene.time.delayedCall(1000/60, () => {
-            this.#checkCollision();
-        });
+        else {
+            this.scene.time.removeEvent(this.lockEvent);
+            this.lockEvent = null;
+        }
     }
 
     /**

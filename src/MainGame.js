@@ -5,12 +5,12 @@ class MainGame extends Phaser.Scene {
     spawnY = 110;
 
     static config = {
-        fallStepMs: 1000,
-        tomTimeMs: 350,
+        fallStepMs: 800,
+        tomTimeMs: 300,
         levelDurationMs: 10000,
         pieceDelayMs: 1000,
         maxLevel: 100,
-        endFallStepMs: 250,
+        endFallStepMs: 200,
         endTomTimeMs: 150,
         endPieceDelayMs: 300,
         clearDelay: 100,
@@ -59,6 +59,8 @@ class MainGame extends Phaser.Scene {
         this.levelBox.height = height/6;
         this.layer.add(this.levelBox);
 
+        this.levelText = this.add.bitmapText(width/8, height/4, "retroFont", "Level: ", 32).setOrigin(0.5, 0.5);
+
         this.playerBox = this.add.nineslice(7*width/8, height/4,'box', 0, 5, 5, 5, 5, 5, 5).setOrigin(0.5, 0.5);
         this.playerBox.width = width/5;
         this.playerBox.height = height/6;
@@ -69,7 +71,7 @@ class MainGame extends Phaser.Scene {
         this.pieceBox.height = height/4;
         this.layer.add(this.pieceBox);
         
-        this.scoreText = this.add.text(width/2 - 50, 40, "00000", {fontSize: '32px', fill: '#fff'}).setOrigin(0.5, 0.5);
+        this.scoreText = this.add.bitmapText(width/2 - 50, 30, "retroFont", "00000", 32).setOrigin(0.5, 0.5);
         this.layer.add(this.scoreText);
         
         let div = this.add.rectangle(width/2, 60, width, 10, 0x9137cd).setOrigin(0.5, 0.5);
@@ -85,7 +87,7 @@ class MainGame extends Phaser.Scene {
         this.gameOverBox.setDepth(1);
         this.layer.add(this.gameOverBox);
         
-        this.gameOverText = this.add.text(width/2, height/2, "Game Over", {fontSize: '32px', fill: '#fff'}).setOrigin(0.5, 0.5);
+        this.gameOverText = this.add.bitmapText(width/2, height/2, "retroFont", "Game Over", 30).setOrigin(0.5, 0.5);
         this.gameOverText.visible = false;
         this.gameOverText.setDepth(1);
         this.layer.add(this.gameOverText);
@@ -95,6 +97,7 @@ class MainGame extends Phaser.Scene {
         this.fallStepMs = MainGame.config.fallStepMs; // Delay between piece falling one step
         this.tomTimeMs = MainGame.config.tomTimeMs; // Time it takes for a piece to lock into position
         this.level = 1; // Current level
+        this.lastLevelUpTime = Date.now(); // Time of last level up
         Shape.pieceScale = (1/Settings.spriteSize) * (this.gameBox.width/8);
         Shape.displayScale = (1/Settings.spriteSize) * (3*this.pieceBox.width/4);
         Shape.pieceSize = Settings.spriteSize * Shape.pieceScale;
@@ -187,6 +190,8 @@ class MainGame extends Phaser.Scene {
         this.easeGameValues();
         this.processInput();
         this.updateScoreText();
+        if (this.activePiece != null)
+            this.activePiece.update();
     }
 
     comboEventPopup(score, name=undefined) {
@@ -197,8 +202,8 @@ class MainGame extends Phaser.Scene {
         else {
             comboText = "Combo!  " + score + " pts";
         }
-        let comboPopup = this.add.text(Settings.width/2, this.scoreText.y + 100, 
-            comboText, {fontSize: '28px', fill: '#fff'}).setOrigin(0.5, 0.5);
+        let comboPopup = this.add.bitmapText(Settings.width/2, this.scoreText.y + 100, 
+            "retroFont", comboText, 28).setOrigin(0.5, 0.5);
         comboPopup.setDepth(1);
         comboPopup.scale = 0.1;
         comboPopup.alpha = 0;
@@ -223,8 +228,8 @@ class MainGame extends Phaser.Scene {
         let comboScore = 0;
         comboScore += this.#checkForVerticalCombo(piece);
         comboScore += this.#checkForDiagonalCombo(piece);
-        // comboScore += this.#checkForAntiDiagonalCombo(piece);
-        // comboScore += this.#checkForHorizontalCombo(piece);
+        comboScore += this.#checkForAntiDiagonalCombo(piece);
+        comboScore += this.#checkForHorizontalCombo(piece);
         return comboScore;
     }
 
@@ -296,10 +301,6 @@ class MainGame extends Phaser.Scene {
                     for (let j = i; j > i - comboSequence.length; j--) {
                         boardDiag[j].destroy();
                         Shape.board[boardDiag[j].X][boardDiag[j].Y] = null;
-                        // if (Shape.board[piece.X][j] != null) {
-                        //     Shape.board[piece.X][j].destroy();
-                        //     Shape.board[piece.X][j] = null;
-                        // }
                     }
                     return comboScore;
                 }
@@ -315,8 +316,8 @@ class MainGame extends Phaser.Scene {
      * @returns {number} The total score of the combos found.
      */
     #checkForAntiDiagonalCombo(piece) {
-        let combos = MainGame.combos.diagonal;
-        let boardDiag = piece.getDiagonal();
+        let combos = MainGame.combos.antiDiagonal;
+        let boardDiag = piece.getAntiDiagonal();
         let diag = this.processBoardSlice(piece.getAntiDiagonal());
         for (let combo of combos) {
             let comboSequence = combo.sequence;
@@ -337,10 +338,6 @@ class MainGame extends Phaser.Scene {
                     for (let j = i; j > i - comboSequence.length; j--) {
                         boardDiag[j].destroy();
                         Shape.board[boardDiag[j].X][boardDiag[j].Y] = null;
-                        // if (Shape.board[piece.X][j] != null) {
-                        //     Shape.board[piece.X][j].destroy();
-                        //     Shape.board[piece.X][j] = null;
-                        // }
                     }
                     return comboScore;
                 }
@@ -356,9 +353,9 @@ class MainGame extends Phaser.Scene {
      * @returns {number} The total score of the combos found.
      */
     #checkForHorizontalCombo(piece) {
-        let combos = MainGame.combos.diagonal;
-        let boardRow = piece.getDiagonal();
-        let row = this.processBoardSlice(piece.getDiagonal());
+        let combos = MainGame.combos.horizontal;
+        let boardRow = piece.getBoardRow();
+        let row = this.processBoardSlice(piece.getBoardRow());
         for (let combo of combos) {
             let comboSequence = combo.sequence;
             let comboScore = combo.score;
@@ -378,10 +375,6 @@ class MainGame extends Phaser.Scene {
                     for (let j = i; j > i - comboSequence.length; j--) {
                         boardRow[j].destroy();
                         Shape.board[boardRow[j].X][boardRow[j].Y] = null;
-                        // if (Shape.board[piece.X][j] != null) {
-                        //     Shape.board[piece.X][j].destroy();
-                        //     Shape.board[piece.X][j] = null;
-                        // }
                     }
                     return comboScore;
                 }
@@ -464,6 +457,8 @@ class MainGame extends Phaser.Scene {
 
     // Interpolate game variables from min->max based on level
     easeGameValues() {
+        if (Date.now() - this.lastLevelUpTime > MainGame.config.levelDurationMs)
+            this.level += 1;
         this.fallStepMs = this.fallStepTween.getValue();
         this.tomTimeMs = this.tomTimeTween.getValue();
         this.pieceDelayMs = this.pieceDelayTween.getValue();
@@ -489,9 +484,10 @@ class MainGame extends Phaser.Scene {
         }
         this.tweens.killTweensOf(this.nextPiece);
         this.activePiece.setPosition(this.spawnX, this.spawnY);
-        this.activePiece.beginFall();
+        this.activePiece.fallIncrement = this.fallStepMs;
+        this.activePiece.lockBuffer = this.tomTimeMs;
         this.activePiece.setToGameSize();
-        this.activePiece.isActivePiece = true;
+        this.activePiece.activate(3, 6);
         this.nextDisplayPiece();
     }
 
@@ -547,6 +543,7 @@ class MainGame extends Phaser.Scene {
             });
             this.events.once('boardcleared', () => this.nextDisplayPiece());
             this.events.once('boardcleared', () => this.spawnShape());
+            this.lastLevelUpTime = Date.now();
             this.gameRunning = true;
         }
     }
