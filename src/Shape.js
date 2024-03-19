@@ -20,6 +20,7 @@ class Shape extends Phaser.GameObjects.Sprite {
     constructor(scene, shape, x, y, fallIncrement=1000, lockBuffer=500) {
         super(scene, x, y, shape);
         scene.add.existing(this);
+        let scoreSound = scene.sound.add('score');
         this.orientation = 1;
         this.shape = shape;
         this.isFalling = false;
@@ -53,6 +54,25 @@ class Shape extends Phaser.GameObjects.Sprite {
             }
         };
         this.lockEvent = null;
+        
+        /** @type {Phaser.Types.Tweens.TweenBuilderConfig} */
+        this.destroyedTween = {
+            targets: this,
+            scaleX: 0,
+            scaleY: 0,
+            x: this.x + 50,
+            y: this.y + 50,
+            alpha: 0.2,
+            delay: Phaser.Math.Between(0, 300),
+            onUpdate: () => {
+                this.angle += 2;
+            },
+            duration: 300,
+            onComplete: () => {
+                scoreSound.play();
+                super.destroy();
+            }
+        }
     }
 
     #fallTime = 0;
@@ -76,6 +96,7 @@ class Shape extends Phaser.GameObjects.Sprite {
 
     flip() {
         if (!this.scene.tweens.isTweening(this) && this.isActivePiece) {
+            if (this.shape == 'triangle') return;
             this.orientation = -this.orientation;
             console.log("Flipping")
             this.scene.tweens.add({
@@ -122,6 +143,11 @@ class Shape extends Phaser.GameObjects.Sprite {
         }
     }
 
+
+    /**
+     * Moves the shape down by one grid cell.
+     * @returns {void}
+     */
     softDrop() {
         if (!this.isActivePiece) return;
         if (this.softDropping) return;
@@ -352,6 +378,19 @@ class Shape extends Phaser.GameObjects.Sprite {
             y++;
         }
         return out;
+    }
+
+    destroy(cleared=false) {
+        if (this.lockEvent != null) {
+            this.scene.time.removeEvent(this.lockEvent);
+        }
+        if (!cleared) {
+            this.scene.tweens.killTweensOf(this);
+            this.scene.tweens.add(this.destroyedTween);
+        }
+        else {
+            super.destroy();
+        }
     }
 
 }

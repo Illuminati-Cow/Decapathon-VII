@@ -14,8 +14,10 @@ class Load extends Phaser.Scene {
         this.load.image('squiggle', 'decap_Squiggle.png');
         this.load.image('rectangle', 'decap_Rectangle.png');
         this.load.image('box', 'decap_Box.png');
+        this.load.image('bg', 'decap_BG.png');
         this.load.audio('smallCombo', 'sfx/decap_SmallCombo.wav')
-        this.load.audio('lock', 'sfx/decap_Lock.wav')
+        this.load.audio('lock', 'sfx/decap_PieceLock.mp3')
+        this.load.audio('score', 'sfx/decap_Score.mp3')
     }
     /**
      * Creates all global assets needed in the game.

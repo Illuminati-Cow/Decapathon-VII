@@ -5,15 +5,16 @@ class MainGame extends Phaser.Scene {
     spawnY = 110;
 
     static config = {
-        fallStepMs: 800,
+        fallStepMs: 700,
         tomTimeMs: 300,
         levelDurationMs: 10000,
-        pieceDelayMs: 1000,
+        pieceDelayMs: 500,
         maxLevel: 100,
         endFallStepMs: 200,
         endTomTimeMs: 150,
         endPieceDelayMs: 300,
         clearDelay: 100,
+        softDropIncrementMs: 50,
     }
 
     static combos = {
@@ -47,6 +48,11 @@ class MainGame extends Phaser.Scene {
         // This allows VFX to apply to every object in the scene
         this.layer = this.add.layer();
         this.layer.setDepth(0);
+
+        let bg = this.add.image(78,0,'bg').setOrigin(0.15, 0.05);
+        bg.scale = 0.55;
+        this.layer.add(bg);
+
         // Create game objects
         this.gameBox = this.add.nineslice(width/2,height,'box', 0, 5, 5, 5, 5, 5, 5).setOrigin(0.5, 1);
         this.gameBox.width = width/2;
@@ -54,17 +60,23 @@ class MainGame extends Phaser.Scene {
         this.gameBox.y -= height/25;
         this.layer.add(this.gameBox);
 
-        this.levelBox = this.add.nineslice(width/8, height/4,'box', 0, 5, 5, 5, 5, 5, 5).setOrigin(0.5, 0.5);
+        this.levelBox = this.add.nineslice(7*width/8, height/4,'box', 0, 5, 5, 5, 5, 5, 5).setOrigin(0.5, 0.5);
         this.levelBox.width = width/5;
         this.levelBox.height = height/6;
         this.layer.add(this.levelBox);
 
-        this.levelText = this.add.bitmapText(width/8, height/4, "retroFont", "Level: ", 32).setOrigin(0.5, 0.5);
+        let levelText = this.add.bitmapText(7*width/8, height/4-20, "retroFont", "Level", 28).setOrigin(0.5, 0.5);
+        this.layer.add(levelText);
+        this.levelNumberText = this.add.bitmapText(7*width/8, height/4+15, "retroFont", "01", 28).setOrigin(0.5, 0.5);
 
-        this.playerBox = this.add.nineslice(7*width/8, height/4,'box', 0, 5, 5, 5, 5, 5, 5).setOrigin(0.5, 0.5);
+        this.playerBox = this.add.nineslice(width/8, height/4,'box', 0, 5, 5, 5, 5, 5, 5).setOrigin(0.5, 0.5);
         this.playerBox.width = width/5;
         this.playerBox.height = height/6;
         this.layer.add(this.playerBox);
+
+        let playerText = this.add.bitmapText(width/8, height/4 - 20, "retroFont", "Player", 28).setOrigin(0.5, 0.5);
+        this.layer.add(playerText);
+        let playerNumberText = this.add.bitmapText(width/8, height/4+15, "retroFont", "01", 28).setOrigin(0.5, 0.5);
 
         this.pieceBox = this.add.nineslice(7*width/8, 7*height/10,'box', 0, 5, 5, 5, 5, 5, 5).setOrigin(0.5, 0.5);
         this.pieceBox.width = width/7;
@@ -92,6 +104,9 @@ class MainGame extends Phaser.Scene {
         this.gameOverText.setDepth(1);
         this.layer.add(this.gameOverText);
 
+        this.startText = this.add.bitmapText(width/2, height/5, "retroFont", "Press any key to start", 25).setOrigin(0.5, 0.5);
+        this.layer.add(this.startText);
+
         // Gameplay variables
         this.pieceDelayMs = MainGame.config.pieceDelayMs; // Delay after scoring piece to spawn next piece
         this.fallStepMs = MainGame.config.fallStepMs; // Delay between piece falling one step
@@ -101,7 +116,7 @@ class MainGame extends Phaser.Scene {
         Shape.pieceScale = (1/Settings.spriteSize) * (this.gameBox.width/8);
         Shape.displayScale = (1/Settings.spriteSize) * (3*this.pieceBox.width/4);
         Shape.pieceSize = Settings.spriteSize * Shape.pieceScale;
-        Shape.softDropIncrement = MainGame.config.endFallStepMs;
+        Shape.softDropIncrement = MainGame.config.softDropIncrementMs;
 
         // Their tweens
         this.fallStepTween = this.tweens.addCounter({
@@ -361,12 +376,11 @@ class MainGame extends Phaser.Scene {
             let comboScore = combo.score;
             let sequence = [];
             for (let i = 0; i < row.length; i++) {
-                // If there is an empty space in the column, reset the sequence
+                // If there is an empty space in the row, reset the sequence
                 if (row[i] == null) {
                     sequence = [];
                     continue;
                 }
-                
                 // Add the type of the piece to the sequence
                 sequence.push(row[i]);
 
@@ -387,7 +401,6 @@ class MainGame extends Phaser.Scene {
     isArrayInArray(larger, smaller) {
         if (!Array.isArray(larger) || !Array.isArray(smaller)) return false;
         if (larger.length < smaller.length) return false;
-        console.log("Array Check: ",larger, smaller);
         let i, j;
         for (i = 0; i < larger.length; i++) {
             if (larger[i] === smaller[0]) {
@@ -429,14 +442,16 @@ class MainGame extends Phaser.Scene {
         if (Shape.board[i][j] != null) {
             this.tweens.add({
                 targets: Shape.board[i][j],
-                scale: 0,
-                duration: 500,
+                scaleX: 0,
+                scaleY: 0,
+                ease: 'Linear',
+                duration: clearDelay,
                 y: Shape.board[i][j].y + 100,
-                callback: () => {
-                    Shape.board[i][j].destroy();
+                onComplete: () => {
+                    Shape.board[i][j].destroy(true);
                     Shape.board[i][j] = null;
                 }
-            })
+            });
         }
         else {
             clearDelay = 0;
@@ -451,19 +466,33 @@ class MainGame extends Phaser.Scene {
 
         if (i == Shape.board.length-1 && j == Shape.board[i].length-1) {
             console.log("Board cleared");
-            this.events.emit('boardcleared');
+            this.time.delayedCall(clearDelay, () => this.events.emit('boardcleared'));
         }
     }
 
     // Interpolate game variables from min->max based on level
     easeGameValues() {
-        if (Date.now() - this.lastLevelUpTime > MainGame.config.levelDurationMs)
+        if (Date.now() - this.lastLevelUpTime > MainGame.config.levelDurationMs) {
             this.level += 1;
+            this.lastLevelUpTime = Date.now();
+            this.levelNumberText.setText(this.level.toString().padStart(2, "0"));
+            this.tweens.add({
+                targets: this.levelNumberText,
+                scaleX: 1.5,
+                scaleY: 1.5,
+                ease: 'Sine',
+                duration: 300,
+                yoyo: true,
+            });
+        }
         this.fallStepMs = this.fallStepTween.getValue();
         this.tomTimeMs = this.tomTimeTween.getValue();
         this.pieceDelayMs = this.pieceDelayTween.getValue();
     }
 
+    /**
+     * Process user input for the game.
+     */
     processInput() {
         if (!this.gameRunning) return;
         if (this.activePiece == null) return;
@@ -516,9 +545,19 @@ class MainGame extends Phaser.Scene {
         this.layer.add(this.nextPiece);
     }
 
+    // Start the game and reset all game variables
+    // Play start animations
     startGame() {
         if (Date.now() - this.startTime > this.startDelay && !this.gameRunning) {
             console.log("Game Started");
+            this.tweens.add({
+                targets: this.startText,
+                scaleX: 0.05,
+                scaleY: 0.05,
+                ease: 'Quintic',
+                duration: 300,
+                onComplete: () => {this.startText.visible = false;},
+            });
             this.clearBoard();
             this.score = 0;
             this.updateScoreText();
@@ -548,14 +587,22 @@ class MainGame extends Phaser.Scene {
         }
     }
 
+    // End the game and display the game over screen and restart text
     endGame() {
+        // Reset game variables
         this.gameRunning = false;
         this.gameOver = true;
         this.activePiece.isActivePiece = false;
         this.activePiece = null;
-        this.nextPiece.destroy();
+        this.nextPiece.destroy(true);
         this.nextPiece = null;
+        this.startTime = Date.now();
+        this.lastLevelUpTime = Date.now();
+        this.levelNumberText.setText("01");
+        this.level = 1;
         console.log("Game Over");
+
+        // Show game over screen
         this.gameOverBox.visible = true;
         this.gameOverText.visible = true;
         this.tweens.add({
@@ -574,6 +621,19 @@ class MainGame extends Phaser.Scene {
             ease: 'Bounce',
             duration: 750,
         });
-        this.startTime = Date.now();
+
+        // Display restart text
+        this.startText.setText("Press any key to restart");
+        this.startText.visible = true;
+        this.startText.setDepth(1);
+        this.startText.alpha = 0.2;
+        this.tweens.add({
+            targets: this.startText,
+            scaleX: 1,
+            scaleY: 1,
+            alpha: 1,
+            ease: 'Quintic',
+            duration: 500,
+        });
     }
 }
