@@ -7,6 +7,7 @@ class MainMenu extends Menu {
 
     create()
     {
+        this.sound.add('bgm').play({loop: true, volume: 0.2});
         this.add.image(0,0,'menuscreen').setOrigin(0);
         let startButton = new Button(
             this,

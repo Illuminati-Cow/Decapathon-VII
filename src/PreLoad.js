@@ -49,6 +49,7 @@ class Preload extends Phaser.Scene {
         this.load.image('box', 'decap_Box.png');
         this.load.image('combos', 'decap_Combos.png');
         this.load.bitmapFont('retroFont', 'fonts/RetroFont.png', 'fonts/RetroFont.xml');
+        this.load.audio('bgm', 'sfx/decap_Music.opus');
     }
 
     /**

@@ -36,7 +36,8 @@ class CreditsMenu extends Menu {
 
         let credits = this.add.bitmapText(closeButton.x, closeButton.y+20, 'retroFont', 
             'Credits\n Background Art Traced &\nPainted by Jack Tonoyan\n SFX from Pixabay'
-            + '\nSprites by Cole Falxa-Sturken\nProgramming by Cole Falxa-Sturken', 
+            + '\nSprites by Cole Falxa-Sturken\nProgramming by Cole Falxa-Sturken'
+            + '\nMusic by Karl Casey @ White Bat Audio', 
             15
         );
 
