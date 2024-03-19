@@ -22,7 +22,7 @@ class MainMenu extends Menu {
 
         let comboButton = new Button(
             this,
-            -160,
+            -70,
             150,
             150,
             60,
@@ -30,6 +30,22 @@ class MainMenu extends Menu {
             () => {
                 UIManager.Instance.openMenu("ComboMenu");
                 comboButton.clearTint();
+                this.scene.pause(this.name);
+            },
+            null,
+            'center'
+        );
+
+        let creditsButton = new Button(
+            this,
+            -250,
+            150,
+            150,
+            60,
+            "CREDITS",
+            () => {
+                UIManager.Instance.openMenu("CreditsMenu");
+                creditsButton.clearTint();
                 this.scene.pause(this.name);
             },
             null,
